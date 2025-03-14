@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <title>Заметки</title>
+  <script>
+        async function fetchNotes() {
+            const response = await fetch('/notes');
+            const notes = await response.json();
+            const notesList = document.getElementById('notesList');
+            notesList.innerHTML = ''; // Очистить текущий список
+
+            notes.forEach(note => {
+                const noteItem = document.createElement('tr');
+                noteItem.innerHTML = `
+                    <td>${note.title}</td>
+                    <td>${note.content}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editNote(${note.id})">Редактировать</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteNote(${note.id})">Удалить</button>
+                    </td>
+                `;
+                notesList.appendChild(noteItem);
+            });
+        }
+
+        async function createNote() {
+            const title = document.getElementById('noteTitle').value;
+            const content = document.getElementById('noteContent').value;
+
+            const response = await fetch('/notes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title, content }),
+            });
+
+            if (response.ok) {
+                fetchNotes(); // Обновить список заметок
+                document.getElementById('noteTitle').value = '';
+                document.getElementById('noteContent').value = '';
+            }
+        }
+
+        async function deleteNote(id) {
+            await fetch(`/notes/${id}`, {
+                method: 'DELETE'
+            });
+            fetchNotes(); // Обновить список заметок
+        }
+
+        function editNote(id) {
+            // Реализуйте логику редактирования заметки
+            alert('Редактирование заметки с ID: ' + id);
+        }
+
+        window.onload = fetchNotes; // Загрузить заметки при загрузке страницы
+    </script>
+</head>
+<body>
+<div class="container mt-5">
+  <h1 class="text-center">Мои Заметки</h1>
+  <div class="text-right mb-3">
+    <button class="btn btn-primary" data-toggle="modal" data-target="#createNoteModal">Добавить Заметку</button>
+  </div>
+
+  <table class="table table-bordered">
+    <thead>
+    <tr>
+      <th>Заголовок</th>
+      <th>Содержимое</th>
+      <th>Действия</th>
+    </tr>
+    </thead>
+    <tbody id="notesList">
+    <!-- Заметки будут загружены сюда -->
+    </tbody>
+  </table>
+
+  <!-- Модальное окно для создания заметки -->
+  <div class="modal fade" id="createNoteModal" tabindex="-1" role="dialog" aria-labelledby="createNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createNoteModalLabel">Создать Новую Заметку</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Закрыть">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="noteTitle">Заголовок</label>
+            <input type="text" class="form-control" id="noteTitle" placeholder="Введите заголовок" required>
+          </div>
+          <div class="form-group">
+            <label for="noteContent">Содержимое</label>
+            <textarea class="form-control" id="noteContent" rows="3" placeholder="Введите содержимое" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+          <button type="button" class="btn btn-success" onclick="createNote()">Сохранить Заметку</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
